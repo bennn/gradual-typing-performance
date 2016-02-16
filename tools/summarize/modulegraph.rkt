@@ -14,6 +14,24 @@
   (from-tex (-> Path-String ModuleGraph))
   ;; Parse a tex file into a module graph
 
+  (to-tex (-> ModuleGraph Output-Port Void))
+  ;; Print a modulegraph to .tex
+
+  (boundaries (-> ModuleGraph (Listof Boundary)))
+  ;; Return a list of identifier-annotated edges in the program
+  ;; Each boundary is a list (TO FROM PROVIDED)
+  ;;  where PROVIDED is a list of type Provided (see the data definition below for 'struct provided')
+
+  (boundary-to (-> Boundary String))
+  (boundary-from (-> Boundary String))
+  (boundary-provided* (-> Boundary (Listof Provided)))
+
+  (in-edges (-> ModuleGraph (Sequenceof (Pairof String String))))
+  ;; Iterate through the edges in a module graph.
+  ;; Each edges is a pair of (TO . FROM)
+  ;;  the idea is, each edges is a "require" from TO to FROM
+  ;; Order of edges is unspecified.
+
   (module-names (-> ModuleGraph (Listof String)))
   ;; Return a list of all module names in the project
 
@@ -37,10 +55,15 @@
 
   (strip-suffix (-> Path-String String))
   ;; Remove the file extension from a path string
+
+  (infer-project-dir (-> String Path-String))
+  ;; Guess where the project is located in the GTP repo
 )
 (provide
   (struct-out modulegraph)
   ModuleGraph
+  (struct-out provided)
+  Provided
 )
 
 ;; -----------------------------------------------------------------------------
@@ -95,6 +118,13 @@
     res
     (cons (list from to) res)))
 
+(: in-edges (-> ModuleGraph (Listof (Pairof String String))))
+(define (in-edges G)
+  (for*/list : (Listof (Pairof String String))
+             ([src+dst* (in-list (modulegraph-adjlist G))]
+              [dst (in-list (cdr src+dst*))])
+    (cons (car src+dst*) dst)))
+
 ;; Get the name of the project represented by a module graph
 (: project-name (-> ModuleGraph String))
 (define (project-name mg)
@@ -147,6 +177,80 @@
              #:when (member name (cdr node+neighbors)))
     (car node+neighbors)))
 
+;; =============================================================================
+;; --- data definition: provided / required
+
+(struct provided (
+  [>symbol : Symbol] ;; Name of provided identifier
+  [syntax? : Boolean] ;; If #t, identifier is exported syntax or renamed
+  [history : (U #f (Listof Any))]
+  ;; If #f, means id was defined in the module
+  ;; Otherwise, is a flat list of id's history
+) #:transparent )
+(define-type Provided provided)
+
+;; TODO should to/from by symbols?
+(define-type Boundary (List String String (Listof Provided)))
+(define boundary-to car)
+(define boundary-from cadr)
+(define boundary-provided* caddr)
+;; For now, I guess we don't need a struct
+
+;; Return a list of:
+;;   (TO FROM PROVIDED)
+;;  corresponding to the edges of modulegraph `G`.
+;; This decorates each edges with the identifiers provided from a module
+;;  and required into another.
+(: boundaries (-> ModuleGraph (Listof Boundary)))
+(define (boundaries G)
+  ;; Reclaim source directory
+  (define src (infer-untyped-dir (modulegraph-project-name G)))
+  (define name* (module-names G))
+  (define from+provided**
+    (for/list : (Listof (Pairof String (Listof Provided)))
+              ([name (in-list name*)])
+      ((inst cons String (Listof Provided))
+        name
+        (absolute-path->provided* (build-path src (string-append name ".rkt"))))))
+  (for/list : (Listof Boundary)
+            ([to+from (in-edges G)])
+    (define to (car to+from))
+    (define from (cdr to+from))
+    (define maybe-provided* (assoc from from+provided**))
+    (if maybe-provided*
+      (list to from (cdr maybe-provided*))
+      (raise-user-error 'boundaries (format "Failed to get provides for module '~a'" from)))))
+
+(: absolute-path->provided* (-> Path (Listof Provided)))
+(define (absolute-path->provided* p)
+  (define cm (cast (compile (get-module-code p)) Compiled-Module-Expression))
+  (define-values (p* s*) (module-compiled-exports cm))
+  (append
+   (parse-provided p*)
+   (parse-provided s* #:syntax? #t)))
+
+(define-type RawProvided
+  (Pairof (U #f Integer)
+    (Listof (List Symbol History))))
+(define-type History (Listof Any)) ;; Lazy
+
+(: parse-provided (->* [(Listof RawProvided)] [#:syntax? Boolean] (Listof Provided)))
+(define (parse-provided p* #:syntax? [syntax? #f])
+  (define p0
+    (apply append
+      (for/list : (Listof (Listof (List Symbol History)))
+                ([p (in-list p*)] #:when (and (car p) (zero? (car p))))
+        (define p+ (cdr p))
+        (if (and (not (null? p+))
+                 (symbol? (car p+)))
+          (list p+)
+          p+))))
+  (for/list : (Listof Provided)
+            ([p : (List Symbol History) (in-list p0)])
+    (define name (car p))
+    (define history (cadr p))
+    (provided name syntax? (and (not (null? history)) history))))
+
 ;; -----------------------------------------------------------------------------
 ;; --- parsing TiKZ
 
@@ -167,8 +271,8 @@
 
 (: from-directory (-> Path-String ModuleGraph))
 (define (from-directory parent)
+  ;; TODO duplicating work right now, should have project-name->MG
   (define name (path->project-name parent))
-  ;; TODO works when we're in the paper/ directory, but nowhere else
   (define u-dir (infer-untyped-dir name))
   ;; No edges, just nodes
   (: adjlist AdjList)
@@ -187,12 +291,19 @@
     (raise-user-error 'modulegraph "Must be in `gradual-typing-performance` repo to use script")))
 
 ;; Blindly search for a directory called `name`.
+(: infer-project-dir (-> Path-String Path))
+(define (infer-project-dir name)
+  (define p-dir (build-path (get-git-root) "benchmarks" name))
+  (if (directory-exists? p-dir)
+    p-dir
+    (raise-user-error 'modulegraph "Failed to find project directory for '~a', cannot summarize data" name)))
+
 (: infer-untyped-dir (-> Path-String Path))
 (define (infer-untyped-dir name)
-  (define u-dir (build-path (get-git-root) "benchmarks" name "untyped"))
+  (define u-dir (build-path (infer-project-dir name) "untyped"))
   (if (directory-exists? u-dir)
     u-dir
-    (raise-user-error 'modulegraph (format "Failed to find source code for '~a', cannot summarize data" name))))
+    (raise-user-error 'modulegraph "Failed to find untyped code for '~a', cannot summarize data" name)))
 
 ;; Interpret a .tex file containing a TiKZ picture as a module graph
 (: from-tex (-> Path-String ModuleGraph))
@@ -415,12 +526,14 @@
   (for/list : AdjList
             ([abs-path (in-list abs-path*)]
              [src-name (in-list src-name*)])
-    (cons src-name (absolute-path->imports abs-path src-name*))))
+    (cons src-name
+          (filter (lambda (mod-name) (member mod-name src-name*))
+                  (absolute-path->imports abs-path)))))
 
 ;; '((0 #<module-path-index:(racket/base)> #<module-path-index:(benchmark-util)> #<module-path-index:(racket/file)> #<module-path-index:("lcs.rkt")>))
 
-(: absolute-path->imports (-> Path-String (Listof String) (Listof String)))
-(define (absolute-path->imports ps valid-name*)
+(: absolute-path->imports (-> Path-String (Listof String)))
+(define (absolute-path->imports ps)
   (define p (if (path? ps) ps (string->path ps)))
   (define mc (cast (compile (get-module-code p)) Compiled-Module-Expression))
   (for/fold : (Listof String)
@@ -431,7 +544,7 @@
         (let ([name+ (if (string? name)
                        (strip-suffix (strip-directory (string->path name)))
                        #f)])
-          (if (and (string? name+) (member name+ valid-name*))
+          (if (string? name+)
             (cons name+ acc)
             acc)))
       acc)))
@@ -473,41 +586,46 @@
 ;;  (may need to bend edges & permute a row's nodes)
 (: directory->tikz (-> Path Path-String Void))
 (define (directory->tikz p out-file)
-  (define N (path->project-name p))
   (define MG (from-directory p))
-  (define tsort (topological-sort (modulegraph-adjlist MG)))
   (with-output-to-file out-file #:exists 'replace
-    (lambda ()
-      (displayln "\\begin{tikzpicture}\n")
-      (: name+tikzid* (Listof (Pairof String String)))
-      (define name+tikzid*
-       (apply append
-        (for/list : (Listof (Listof (Pairof String String)))
-                  ([group (in-list tsort)]
-                   [g-id  (in-naturals)])
-          (for/list : (Listof (Pairof String String))
-                    ([name (in-list group)]
-                     [n-id (in-naturals)])
-            (define tikzid (format "~a~a" g-id n-id))
-            (define pos
-              (cond
-               [(and (zero? g-id) (zero? n-id)) ""]
-               [(zero? n-id) (format "[left of=~a,xshift=-2cm]" (decr-left tikzid))]
-               [else (format "[below of=~a,yshift=-1cm]" (decr-right tikzid))]))
-            (printf "  \\node (~a) ~a {\\rkt{~a}{~a}};\n"
-              tikzid pos (name->index MG name) name)
-            (cons name tikzid)))))
-      (newline)
-      (: get-tikzid (-> String String))
-      (define (get-tikzid name)
-        (cdr (or (assoc name name+tikzid*) (error 'NONAME))))
-      (for* ([group (in-list tsort)]
-             [name (in-list group)]
-             [req (in-list (requires MG name))])
-        (printf "  \\draw[->] (~a) -- (~a);\n"
-          (get-tikzid name)
-          (get-tikzid req)))
-      (displayln "\n\\end{tikzpicture}"))))
+    (lambda () (to-tex MG (current-output-port)))))
+
+(: to-tex (-> ModuleGraph Output-Port Void))
+(define (to-tex MG out)
+  (define tsort (topological-sort (modulegraph-adjlist MG)))
+  (parameterize ([current-output-port out])
+    (displayln "\\begin{tikzpicture}\n")
+    ;; -- draw nodes
+    (: name+tikzid* (Listof (Pairof String String)))
+    (define name+tikzid*
+     (apply append
+      (for/list : (Listof (Listof (Pairof String String)))
+                ([group (in-list tsort)]
+                 [g-id  (in-naturals)])
+        (for/list : (Listof (Pairof String String))
+                  ([name (in-list group)]
+                   [n-id (in-naturals)])
+          (define tikzid (format "~a~a" g-id n-id))
+          (define pos
+            (cond
+             [(and (zero? g-id) (zero? n-id)) ""]
+             [(zero? n-id) (format "[left of=~a,xshift=-2cm]" (decr-left tikzid))]
+             [else (format "[below of=~a,yshift=-1cm]" (decr-right tikzid))]))
+          (printf "  \\node (~a) ~a {\\rkt{~a}{~a}};\n"
+            tikzid pos (name->index MG name) name)
+          (cons name tikzid)))))
+    (newline)
+    ;; -- draw edges
+    (: get-tikzid (-> String String))
+    (define (get-tikzid name)
+      (cdr (or (assoc name name+tikzid*) (error 'NONAME))))
+    (for* ([group (in-list tsort)]
+           [name (in-list group)]
+           [req (in-list (requires MG name))])
+      (printf "  \\draw[->] (~a) -- (~a);\n"
+        (get-tikzid name)
+        (get-tikzid req)))
+    (displayln "\n\\end{tikzpicture}")))
 
 (: decr-right (-> String String))
 (define (decr-right str)
@@ -608,6 +726,36 @@
   ;; -- adjlist
   (check-equal? (modulegraph-adjlist MGd)
     '(("client" "constants") ("constants") ("main" "server" "client") ("server" "constants")))
+
+  (: lex-pair<? (-> (Pairof String String) (Pairof String String) Boolean))
+  (define (lex-pair<? a b)
+    (or (string<? (car a) (car b))
+        (and (string=? (car a) (car b))
+             (string<? (cdr a) (cdr b)))))
+
+  (check-equal?
+    (sort (sequence->list (in-edges MGf)) lex-pair<?)
+    '(("collide" . "const") ("collide" . "data") ("const" . "data") ("cut-tail" . "data") ("handlers" . "collide") ("handlers" . "data") ("handlers" . "motion") ("main" . "const") ("main" . "data") ("main" . "handlers") ("main" . "motion") ("motion" . "const") ("motion" . "data") ("motion" . "motion-help") ("motion-help" . "cut-tail") ("motion-help" . "data")))
+
+  (check-equal?
+    (sort (sequence->list (in-edges MGd)) lex-pair<?)
+    '(("client" . "constants") ("main" . "client") ("main" . "server") ("server" . "constants")))
+
+  (let ([bd (boundaries MGd)])
+    (check-equal? (length bd) (length (sequence->list (in-edges MGd))))
+    (let ([b1 (car bd)])
+      (check-equal? (car b1) "client")
+      (check-equal? (cadr b1) "constants")
+      (let ([p* (caddr b1)])
+        (check-equal? (length p*) 2)
+        (check-equal? (provided->symbol (car p*)) 'DATA)
+        (check-equal? (provided->symbol (cadr p*)) 'PORT)))
+    (let ([b3 (caddr bd)])
+      (check-equal? (car b3) "main")
+      (check-equal? (cadr b3) "client")
+      (let ([p* (caddr b3)])
+        (check-equal? (length p*) 1)
+        (check-equal? (provided->symbol (car p*)) 'client))))
 
   ;; -- from-directory
   ;; -- from-tex
@@ -729,9 +877,16 @@
     '(("array-utils" "data") ("array-struct") ("array-broadcast" "synth") ("array-transform" "mixer") ("drum" "sequencer") ("main")))
 
 
+  (check-equal?
+    (map (lambda ([b : Boundary])
+           (list (boundary-to b)
+                 (boundary-from b)
+                 (map provided->symbol (boundary-provided* b))))
+         (boundaries MGd))
+    '(("client" "constants" (DATA PORT)) ("main" "server" (server)) ("main" "client" (client)) ("server" "constants" (DATA PORT))))
+
   ;; -- string->texedge TODO
   ;; -- tex->modulegraph TODO
-
   ;; -- directory->adjlist TODO
 )
 
