@@ -406,6 +406,7 @@
                 #:label (format "~a" (summary->version S)))))
         #:x-label "Config.#"
         #:y-label "Time (ms)"
+        #:y-max (*Y-MAX*)
         #:x-max num-configs
         #:legend-anchor (*LEGEND-ANCHOR*)
         #:width (*PLOT-WIDTH*)
