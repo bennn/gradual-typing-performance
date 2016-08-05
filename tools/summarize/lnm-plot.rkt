@@ -66,7 +66,7 @@
   plot/typed/no-gui
   plot/typed/utils
   typed/pict
-  (only-in racket/list range)
+  (only-in racket/list append* range)
   (only-in racket/math exact-floor exact-ceiling exact-round)
   (only-in math/statistics mean)
   (only-in racket/format ~r)
@@ -378,6 +378,8 @@
       #:height (*PLOT-HEIGHT*)))
   (cast p pict))
 
+(define config-x-jitter : Real 0.4)
+
 (: plot-exact-configurations (-> (Listof Summary) pict))
 (define (plot-exact-configurations S*)
   (define num-configs (get-num-configurations (car S*)))
@@ -394,15 +396,22 @@
                     ([S (in-list S*)]
                      [i (in-naturals 1)])
               (points
-                (for*/list : (Listof (List Real Real))
-                          ([cfg (all-configurations S)]
-                           [t (in-list (configuration->runtimes S cfg))])
-                  (list (bitstring->natural cfg) t))
+                (append*
+                  (for/list : (Listof (Listof (List Real Real)))
+                            ([cfg (all-configurations S)])
+                    (define t* (configuration->runtimes S cfg))
+                    (define x-center (bitstring->natural cfg))
+                    (define x* (linear-seq (- x-center config-x-jitter)
+                                           (+ x-center config-x-jitter)
+                                           (length t*)))
+                    (for/list : (Listof (List Real Real))
+                              ([x (in-list x*)]
+                               [t (in-list t*)])
+                      (list x t))))
                 #:color i
                 #:alpha 0.6
                 #:sym 'fullcircle
                 #:size 6
-                #:x-jitter 0.4
                 #:label (format "~a" (summary->version S)))))
         #:x-label "Config.#"
         #:y-label "Time (ms)"
