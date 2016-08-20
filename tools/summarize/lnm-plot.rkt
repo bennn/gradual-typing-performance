@@ -7,6 +7,7 @@
 ;;  subject to at most L additional conversion steps
 
 (provide
+  count-configurations/mean ;; TODO not a great interface
 
   ;; TODO
   ;; load a summary to an interactive plot
