@@ -16,13 +16,12 @@
   ;;  (p=1%, assuming at least 10 samples)
 
   confidence-interval
-  ;; (->* [(Listof Real)] [#:ci Real] (Pairof Real Real))
+  ;; (->* [(Listof Real)] [#:cv Real] (Pairof Real Real))
   ;; By default, compute 95% confidence interval for supplied data
   ;; Return a pair of the (lower-bound . upper-bound) for 95% confidence.
   ;;
-  ;; Optional parameter gives a confidence offset in place of 1.96
-  ;;  use this to change the interval to 90% or whatever.
-  ;; TODO better name than "confidence offset"
+  ;; Optional parameter #:cv is the critical value.
+  ;; Defaults to 1.96 (for 95% confidence)
 
   independent-state?
   ;; (->* [String] [Natural] (U #f Natural))
@@ -126,15 +125,15 @@
 
 ;; =============================================================================
 
-(define (confidence-interval x* #:ci [ci 1.96])
+(define (confidence-interval x* #:cv [cv 1.96])
   (define u (mean x*))
   (define n (length x*))
   (define s (sample-stddev/mean+length x* u n))
-  (define ci-offset (/ (* ci s) (sqrt n)))
-  (when (<= ci-offset 0)
-    (raise-user-error 'wtfs "S is ~a\n" ci-offset))
-  (cons (- u ci-offset)
-        (+ u ci-offset)))
+  (define cv-offset (/ (* cv s) (sqrt n)))
+  (when (<= cv-offset 0)
+    (raise-user-error 'wtfs "S is ~a\n" cv-offset))
+  (cons (- u cv-offset)
+        (+ u cv-offset)))
 
 ;; =============================================================================
 ;; === Independent state?
