@@ -14,9 +14,8 @@
  match-pair
  automaton-reset
  clone
- automaton-payoff
  ;; --
- Automaton
+ (struct-out automaton)
  ;Payoff
 )
  (: defects (-> Payoff Automaton))

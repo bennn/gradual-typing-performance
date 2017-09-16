@@ -1,5 +1,6 @@
 #lang tagged/racket/base
 
+(define-type Automaton automaton)
 (define-type Probability Nonnegative-Real)
 (define-type Population (cons Automaton* Automaton*))
 (define-type Automaton* [Vectorof Automaton])
@@ -11,8 +12,11 @@
 
 (require require-typed-check/tagged)
 (require/typed/check "automata.rkt"
- [#:opaque Automaton automaton?]
- (automaton-payoff (-> Automaton Payoff))
+ [#:struct automaton (
+  [current : State]
+  [original : State]
+  [payoff : Payoff]
+  [table : Transition*])]
  (defects (-> Payoff Automaton))
  (cooperates (-> Payoff Automaton))
  (tit-for-tat (-> Payoff Automaton))

@@ -11,9 +11,8 @@
  match-pair
  automaton-reset
  clone
- automaton-payoff
  ;; --
- automaton?
+ (struct-out automaton)
 )
 
 ;; -----------------------------------------------------------------------------
