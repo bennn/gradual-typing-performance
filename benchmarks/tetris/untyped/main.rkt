@@ -22,7 +22,7 @@
   (define w0 (world0))
   (define raw (with-input-from-file filename read))
   (unless (list? raw) (error "bad input"))
-  (replay w0 (reverse raw)))
+  (time (replay w0 (reverse raw))))
 
 ;(time (main SMALL_TEST)) ; 0ms
-(time (main LARGE_TEST)) ; 480ms
+(main LARGE_TEST) ; 480ms

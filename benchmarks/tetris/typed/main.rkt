@@ -35,8 +35,9 @@
   (define w0 (world0))
   (define raw (with-input-from-file filename read))
   (if (list? raw)
-    (replay w0 (reverse raw))
+    (let ((rr (reverse raw)))
+      (time (replay w0 rr)))
     (error "bad input")))
 
 ;; (time (main SMALL_TEST)) ; 0ms
-(time (main LARGE_TEST)) ; 417ms
+(main LARGE_TEST) ; 417ms

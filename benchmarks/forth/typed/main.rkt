@@ -4,15 +4,18 @@
   require-typed-check
   "../base/command-types.rkt")
 (require/typed/check "eval.rkt"
-  (forth-eval* (-> Input-Port (Values Any Any)))
+  (forth-eval* (-> (Listof String) (Values Any Any)))
 )
 
 ;; =============================================================================
 
-(define (main)
-  (call-with-input-file* (ann "../base/history.txt" Path-String)
-    (lambda ([p : Input-Port])
-      (let-values ([(_e _s) (forth-eval* p)]) (void))))
+(define ln*
+  (with-input-from-file (ann "../base/history.txt" Path-String)
+    (lambda () (for/list : (Listof String) ((x (in-lines))) x))))
+
+(: main (-> (Listof String) Void))
+(define (main ln*)
+  (let-values ([(_e _s) (forth-eval* ln*)]) (void))
   (void))
 
-(time (main))
+(time (main ln*))

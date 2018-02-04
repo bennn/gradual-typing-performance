@@ -68,13 +68,22 @@
 ;; constraint: (= (vector-length a) (vector-length b))
 ;; Fisher-Yates Shuffle
 
+(define my-random
+  (let ([num*
+          (with-input-from-file "../base/population-random.rktd"
+            (lambda ()
+              (for/list ([ln (in-lines)])
+                (string->number ln))))])
+    (lambda (_)
+      (begin0 (car num*) (set! num* (cdr num*))))))
+
 (define (shuffle-vector b a)
   ;; copy b into a
   (for ([x (in-vector b)][i (in-naturals)])
     (vector-set! a i x))
   ;; now shuffle a 
   (for ([x (in-vector b)] [i (in-naturals)])
-    (define j (random (add1 i)))
+    (define j (my-random (add1 i)))
     (unless (= j i) (vector-set! a i (vector-ref a j)))
     (vector-set! a j x))
   (cons a b))

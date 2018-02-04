@@ -60,6 +60,15 @@
   (define v (build-vector n (lambda (_) (make-random-automaton DEF-COO))))
   (new population% [a* v]))
 
+(define my-random : (-> Any Index)
+  (let ([num*
+          (with-input-from-file "../base/population-random.rktd"
+            (lambda ()
+              (for/list : (Listof Index) ((ln (in-lines)))
+                (cast (string->number ln) Index))))])
+    (lambda (n)
+      (begin0 (car num*) (set! num* (cdr num*))))))
+
 (: population% Population)
 (define population%
   (class object%

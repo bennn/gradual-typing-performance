@@ -12,8 +12,17 @@
  tetras)
 
 (define r (make-pseudo-random-generator))
-(parameterize ((current-pseudo-random-generator r))
-  (random-seed 43453))
+;(parameterize ((current-pseudo-random-generator r))
+;  (random-seed 43453))
+
+(define my-random : (-> Any Any Natural)
+  (let ([num*
+          (with-input-from-file "../base/aux-random.rktd"
+            (lambda ()
+              (for/list : (Listof Natural) ((ln (in-lines)))
+                (cast (string->number ln) Natural))))])
+    (lambda (a b)
+      (begin0 (car num*) (set! num* (cdr num*))))))
 
 (: list-pick-random (-> (Listof Tetra) Tetra))
 (define (list-pick-random ls)

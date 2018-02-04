@@ -46,12 +46,21 @@
 ;; Input      = [0,n)
 ;; Payoff     = N
 
+(define my-random
+  (let ([num*
+          (with-input-from-file "../base/automata-random.rktd"
+            (lambda ()
+              (for/list ((ln (in-lines)))
+                (string->number ln))))])
+    (lambda (n)
+      (begin0 (car num*) (set! num* (cdr num*))))))
+
 (define (make-random-automaton n)
   (new automaton%
-       [current (random n)]
+       [current (my-random n)]
        [payoff 0]
        [table
-        (build-vector n (lambda _ (build-vector n (lambda _ (random n)))))]))
+        (build-vector n (lambda _ (build-vector n (lambda _ (my-random n)))))]))
 
 ;; Automaton = (instance automaton% State Payoff Table)
 (define automaton%

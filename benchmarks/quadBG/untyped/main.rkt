@@ -37,9 +37,8 @@
 ;; 137ms
 (parameterize ([world:quality-default world:draft-quality])
   (time
-    (begin
+    (let ()
       (define to (typeset (quick-sample)))
       (send (new pdf-renderer%) render-to-file to "./output.pdf")
-      (delete-file "./output.pdf")
       (void))))
 ;; 630ms for heart-of-darkness

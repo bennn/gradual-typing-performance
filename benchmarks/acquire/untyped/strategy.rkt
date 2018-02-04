@@ -106,8 +106,13 @@
 (define ordered-s
   (strategy/d first alphabetically-first id))
 
+(define my-random
+  (let ((nn '()))
+    (lambda (n)
+      (begin0 (car nn) (set! nn (cdr nn))))))
+
 (define (random+1 n)
-  (random (+ n 1)))
+  (my-random (+ n 1)))
 
 (define random-s
   (strategy/d randomly-pick randomly-pick random+1))

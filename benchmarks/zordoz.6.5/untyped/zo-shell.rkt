@@ -4,6 +4,7 @@
 ;; (Use `raco make` to generate bytecode)
 
 (provide
+ zo-read
  init)
 
 (require require-typed-check
@@ -34,14 +35,13 @@
 ;; In the future, there may be more entry points.
 (define (init args)
   (match args
-    ['#()
-     (print-usage)]
-    ;; Catch --help flag, and any others
-    [(? has-any-flags?) (print-usage)]
-    [(vector fname)
-     (filename->shell fname)]
-    [(vector fname args ...)
-     (find-all fname args)]))
+    [(vector ctx arg)
+     (find-all ctx (list arg))]))
+
+(define (zo-read fname)
+  (call-with-input-file fname
+    (lambda (port)
+      (zo-parse port))))
 
 ;; --- Commands (could go in their own file)
 
@@ -407,17 +407,10 @@
                  [c2 (in-string prefix)])
          (char=? c1 c2))))
 
-(define (find-all name args #:limit [lim #f])
-  (print-info (format "Loading bytecode file '~a'..." name))
-  (call-with-input-file name
-    (lambda (port)
-      (print-info "Parsing bytecode...")
-      (define ctx (zo-parse port))
-      (print-info "Parsing complete! Searching...")
-      (for ([arg (in-list args)])
-        (printf "FIND '~a' : " arg)
-        (printf "~a results\n" (length (zo-find ctx arg #:limit lim))))
-      (displayln "All done!"))))
+(define (find-all ctx args #:limit [lim #f])
+  (for ([arg (in-list args)])
+    (void (length (zo-find ctx arg #:limit lim))))
+  (void))
 
 ;; Split the string `raw` by whitespace and
 ;; return the second element of the split, if any.

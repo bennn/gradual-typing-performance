@@ -41,12 +41,12 @@
       (define r ((world-on-tick w)))
       (loop r (cdr h))])])))
 
-(define SMALL_TEST "../base/zombie-hist-small.rktd")
-(define MICRO_TEST "../base/zombie-hist-micro.rktd")
+(define SMALL_TEST
+  (with-input-from-file "../base/zombie-hist-small.rktd" read))
+;(define MICRO_TEST "../base/zombie-hist-micro.rktd")
 
-(: main (-> Path-String Void))
-(define (main filename)
-  (define raw-hist (with-input-from-file filename read))
+(: main (-> Any Void))
+(define (main raw-hist)
   (cond
    [(list? raw-hist)
     (define hist (reverse raw-hist))

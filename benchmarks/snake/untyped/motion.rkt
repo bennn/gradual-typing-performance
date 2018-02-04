@@ -6,8 +6,16 @@
 (provide reset!)
 (define r (make-pseudo-random-generator)) 
 (define (reset!)
-  (parameterize ((current-pseudo-random-generator r))
-    (random-seed 1324)))
+  (void))
+
+(define my-random
+  (let ([num*
+         (with-input-from-file "../base/motion-random.rktd"
+           (lambda ()
+             (for/list ([ln (in-lines)])
+               (string->number ln))))])
+    (lambda (a b)
+      (begin0 (car num*) (set! num* (cdr num*))))))
 
 ;; world->world : World -> World
 (define (world->world w)
@@ -33,8 +41,8 @@
 ;; snake-eat : World -> World
 ;; Eat the food and generate a new one.
 (define (snake-eat w)
-  (define i (add1 (random (sub1 BOARD-WIDTH) r)))
-  (define j (add1 (random (sub1 BOARD-HEIGHT) r)))
+  (define i (add1 (my-random (sub1 BOARD-WIDTH) r)))
+  (define j (add1 (my-random (sub1 BOARD-HEIGHT) r)))
   (world (snake-grow (world-snake w))
          (posn i j)
          

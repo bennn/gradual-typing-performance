@@ -9,7 +9,6 @@
  (only-in racket/list filter-not)
  (only-in racket/draw font% make-font current-ps-setup pdf-dc% the-color-database)
  (only-in racket/class inherit define/override send* class new super-new send define/public object% this)
- (only-in racket/file display-to-file)
 (only-in "world.rkt"
   world:font-size-key
   world:font-size-default
@@ -142,5 +141,5 @@
 
     (define/public (render-to-file doc-quad path)
       (define result-bytes (send this render doc-quad))
-      (display-to-file result-bytes path #:exists 'replace #:mode 'binary))
+      (void))
     ))

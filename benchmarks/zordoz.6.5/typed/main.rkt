@@ -1,27 +1,32 @@
 #lang typed/racket/base
 
-(require require-typed-check)
+(require require-typed-check
+         "../base/typed-zo-structs.rkt")
 
 (require/typed/check "zo-shell.rkt"
-  [init (-> (Vectorof String) Void)])
+  [zo-read (-> Path-String zo)]
+  [init (-> (Vector zo String) Void)])
 
 ;; Stress tests: search entire bytecode for the fairly-common branch struct
 (define SELF-TEST '("../base/zo-shell.zo" "../base/zo-find.zo" "../base/zo-string.zo" "../base/zo-transition.zo"))
-(define (self-test)
-  (for ([b SELF-TEST]) (init (vector b "branch"))))
+(define self-test : (Listof zo)
+  (for/list : (Listof zo) ([fn (in-list SELF-TEST)])
+    (zo-read fn)))
 
-(define SMALL-TEST "../base/hello-world.zo")
-(define (small-test)
-  (init (vector SMALL-TEST "branch")))
-
-(define LARGE-TEST "../base/streams.zo")
-(define (large-test)
-  (init (vector LARGE-TEST "branch")))
+;(define SMALL-TEST "../base/hello-world.zo")
+;(define (small-test)
+;  (init (vector SMALL-TEST "branch")))
+;
+;(define LARGE-TEST "../base/streams.zo")
+;(define (large-test)
+;  (init (vector LARGE-TEST "branch")))
 
 ;; -----------------------------------------------------------------------------
 
-(define-syntax-rule (main test)
-  (with-output-to-file "/dev/null" test #:exists 'append))
+(: main (-> (Listof zo) Void))
+(define (main t*)
+  (for ([ctx (in-list t*)])
+    (init (vector ctx "branch"))))
 
 (time (main self-test)) ; 1330ms
 ;(time (main small-test)) ;

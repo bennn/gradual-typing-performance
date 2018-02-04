@@ -55,7 +55,7 @@
   (for/fold
             ([e (cons defn-command CMD*)]
              [s (stack-init)])
-      ([ln (in-lines in)])
+      ([ln (in-list in)])
     (define token* (forth-tokenize ln))
     (cond
      [(or (null? token*)

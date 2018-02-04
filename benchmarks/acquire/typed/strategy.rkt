@@ -120,9 +120,14 @@
 (define ordered-s
   (strategy/d (inst first Hotel Hotel) alphabetically-first (inst id Natural)))
 
+(define my-random : (-> Any Natural)
+  (let ((nn : (Listof Natural) '()))
+    (lambda (n)
+      (begin0 (car nn) (set! nn (cdr nn))))))
+
 (: random+1 (-> Natural Natural))
 (define (random+1 n)
-  (ann (random (+ n 1)) Natural))
+  (ann (my-random (+ n 1)) Natural))
 
 (: random-s Strategy)
 (define random-s

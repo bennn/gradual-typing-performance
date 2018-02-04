@@ -44,6 +44,6 @@
 
 (: main (-> Void))
 (define (main)
-  (printf "The ~a-th prime number is: ~a\n" (add1 N-1) (stream-get primes N-1)))
+  (void (stream-get primes N-1)))
 
 (time (main))

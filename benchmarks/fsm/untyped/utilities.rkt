@@ -10,6 +10,14 @@
 
 ;; =============================================================================
 
+(define my-random
+  (let ([num*
+          (with-input-from-file "../base/utilities-random.rktd"
+            (lambda ()
+              (for/list ([ln (in-lines)])
+                (string->number ln))))])
+    (lambda () (begin0 (car num*) (set! num* (cdr num*))))))
+
 (define (sum l)
   (apply + l))
 
@@ -24,7 +32,7 @@
 (define (choose-randomly probabilities speed #:random (q #false))
   (define %s (accumulated-%s probabilities))
   (for/list ([n (in-range speed)])
-    [define r (or q (random))]
+    [define r (or q (my-random))]
     ;; population is non-empty so there will be some i such that ...
     (let loop  ([%s  %s])
       (cond

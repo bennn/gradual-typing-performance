@@ -48,6 +48,15 @@
 (define-type State Natural)
 (define-type Input Natural)
 
+(define my-random : (-> Any Index)
+  (let ([num*
+          (with-input-from-file "../base/automata-random.rktd"
+            (lambda ()
+              (for/list : (Listof Index) ((ln (in-lines)))
+                (cast (string->number ln) Index))))])
+    (lambda (n)
+      (begin0 (car num*) (set! num* (cdr num*))))))
+
 (define (make-random-automaton n)
   (: trans [-> Any [Vectorof State]])
   (define (trans _i) (build-vector n (lambda (_) (random n))))

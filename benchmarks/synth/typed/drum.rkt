@@ -22,8 +22,17 @@
 
 (provide drum)
 
+(define my-random : (-> Float)
+  (let ((nn
+          (with-input-from-file "../base/drum-random.rktd"
+            (lambda ()
+              (for/list : (Listof Float) ((ln (in-lines)))
+                (cast (string->number ln) Float))))))
+    (lambda ()
+      (begin0 (car nn) (set! nn (cdr nn))))))
+
 (: random-sample (-> Float))
-(define (random-sample) (- (* 2.0 (random)) 1.0))
+(define (random-sample) (- (* 2.0 (my-random)) 1.0))
 
 ;; Drum "samples" (Arrays of floats)
 ;; TODO compute those at compile-time

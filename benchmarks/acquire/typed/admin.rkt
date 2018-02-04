@@ -71,6 +71,15 @@
   ;; (display "] ")
   ;; (displayln msg))
 
+(define my-random : (-> Any Natural)
+  (let ((nn
+          (with-input-from-file "../base/admin-random.rktd"
+            (lambda ()
+              (for/list : (Listof Natural) ((ln (in-lines)))
+                (cast (string->number ln) Natural))))))
+    (lambda (n)
+      (begin0 (car nn) (set! nn (cdr nn))))))
+
 (: administrator% Administrator%)
 (define administrator%
   (class object% 
@@ -84,8 +93,8 @@
     
     ;; effect: keep track of players 
     (define/public (sign-up name player)
-      (define pre (if (< (random 100) 50) "player" "spieler"))
-      (set! *count (+ *count 1 (random 10)))
+      (define pre (if (< (my-random 100) 50) "player" "spieler"))
+      (set! *count (+ *count 1 (my-random 10)))
       (set! name (format "~a~a:~a" pre (number->string *count) name))
       (set! *named-players (cons (list name player) *named-players))
       name)

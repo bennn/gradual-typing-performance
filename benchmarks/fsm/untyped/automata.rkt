@@ -26,9 +26,17 @@
                    table)
                    #:transparent)
 
+(define my-random
+  (let ([num*
+          (with-input-from-file "../base/automata-random.rktd"
+            (lambda ()
+              (for/list ([ln (in-lines)])
+                (string->number ln))))])
+    (lambda (_) (begin0 (car num*) (set! num* (cdr num*))))))
+
 (define (make-random-automaton n)
-  (define (transitions _i) (build-vector n (lambda (_) (random n))))
-  (define original-current (random n))
+  (define (transitions _i) (build-vector n (lambda (_) (my-random n))))
+  (define original-current (my-random n))
   (automaton original-current original-current 0 (build-vector n transitions)))
 
 (define (make-automaton current table)

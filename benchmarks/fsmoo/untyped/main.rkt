@@ -1,5 +1,5 @@
 #lang racket
-(random-seed 7480)
+;(random-seed 7480)
 
 ;; Run a Simulation of Interacting Automata
 

@@ -10,8 +10,7 @@
  "../base/quad-types.rkt"
  (only-in racket/list filter-not)
  (only-in typed/racket/draw Font% make-font current-ps-setup pdf-dc% the-color-database)
- (only-in typed/racket/class inherit define/override send* class new super-new send define/public object% this)
- (only-in racket/file display-to-file))
+ (only-in typed/racket/class inherit define/override send* class new super-new send define/public object% this))
 (require/typed/check "world.rkt"
   [world:font-size-key QuadAttrKey]
   [world:font-size-default (Parameterof Positive-Flonum)]
@@ -152,5 +151,5 @@
     (: render-to-file (Quad Path-String -> Void))
     (define/public (render-to-file doc-quad path)
       (define result-bytes (send this render doc-quad))
-      (display-to-file result-bytes path #:exists 'replace #:mode 'binary))
+      (void))
     ))

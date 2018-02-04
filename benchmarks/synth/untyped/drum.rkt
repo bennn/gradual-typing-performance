@@ -16,7 +16,16 @@
 
 ;; -- drum
 
-(define (random-sample) (- (* 2.0 (random)) 1.0))
+(define my-random
+  (let ((nn
+          (with-input-from-file "../base/drum-random.rktd"
+            (lambda ()
+              (for/list ((ln (in-lines)))
+                (string->number ln))))))
+    (lambda ()
+      (begin0 (car nn) (set! nn (cdr nn))))))
+
+(define (random-sample) (- (* 2.0 (my-random)) 1.0))
 
 ;; Drum "samples" (Arrays of floats)
 (define bass-drum

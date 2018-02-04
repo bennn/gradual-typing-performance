@@ -9,12 +9,20 @@
  tetras)
 
 (define r (make-pseudo-random-generator))
-(parameterize ((current-pseudo-random-generator r))
-  (random-seed 43453))
+;(parameterize ((current-pseudo-random-generator r))
+;  (random-seed 43453))
 
+(define my-random
+  (let ([num*
+          (with-input-from-file "../base/aux-random.rktd"
+            (lambda ()
+              (for/list ((ln (in-lines)))
+                (string->number ln))))])
+    (lambda (a b)
+      (begin0 (car num*) (set! num* (cdr num*))))))
 
 (define (list-pick-random ls)
-  (list-ref ls (random (length ls) r)))
+  (list-ref ls (my-random (length ls) r)))
 
 (define neg-1 -1)
 

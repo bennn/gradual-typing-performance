@@ -37,6 +37,15 @@
   (define v (build-vector n (lambda (_) (make-random-automaton DEF-COO))))
   (new population% [a* v]))
 
+(define my-random
+  (let ([num*
+          (with-input-from-file "../base/population-random.rktd"
+            (lambda ()
+              (for/list ((ln (in-lines)))
+                (string->number ln))))])
+    (lambda (n)
+      (begin0 (car num*) (set! num* (cdr num*))))))
+
 (define population%
   (class object%
     (init-field a* (b* a*))
@@ -81,7 +90,7 @@
         (vector-set! b* i x))
       ;; now shuffle a 
       (for ([x (in-vector a*)] [i (in-naturals)])
-        (define j (random (add1 i)))
+        (define j (my-random (add1 i)))
         (unless (= j i) (vector-set! b* i (vector-ref b* j)))
         (vector-set! b* j x))
       (define tmp a*)

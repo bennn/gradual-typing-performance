@@ -23,9 +23,14 @@
 
 ;; ---------------------------------------------------------------------------------------------------
 
+(define my-random : (-> Any Natural)
+  (let ((nn : (Listof Natural) '()))
+    (lambda (n)
+      (begin0 (car nn) (set! nn (cdr nn))))))
+
 (: randomly-pick (All (A) (-> (Listof A) A)))
 (define (randomly-pick l)
-  (list-ref l (random (length l))))
+  (list-ref l (my-random (length l))))
 
 (: ext:aux:partition (All (A B) (-> (Listof A) (-> A Real) (-> A B) (Listof (Listof B)))))
 (define (ext:aux:partition lo-h-size selector info)

@@ -41,6 +41,11 @@
 (define (create n c)
   (new player% [name n][choice c]))
 
+(define my-random : (-> Any Natural)
+  (let ((nn : (Listof Natural) '()))
+    (lambda (n)
+      (begin0 (car nn) (set! nn (cdr nn))))))
+
 (: player% Player%)
 (define player%
   (class object%
@@ -67,7 +72,7 @@
       ;; (values to-place hotel shares-to-buy))
     
     (define/public (keep hotels)
-      (map (lambda (h) (< (random 100) 50)) hotels))
+      (map (lambda (h) (< (my-random 100) 50)) hotels))
     
     (define/public (receive-tile t)
       (void))

@@ -1,7 +1,7 @@
 #lang typed/racket
 
 ;; Run a Simulation of Interacting Automata
-(random-seed 7480)
+;(random-seed 7480)
 
 ;; =============================================================================
 (require require-typed-check

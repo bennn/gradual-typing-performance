@@ -38,12 +38,13 @@
 (define (main filename)
   (define w0 (WORLD))
   (define raw-hist (with-input-from-file filename read))
-  (cond [(list? raw-hist)
-         (define hist (reverse raw-hist))
-         (for ([i (in-range 100)])
-           (replay w0 hist))]
-        [else
-         (error "bad input")]))
+  (time
+    (cond [(list? raw-hist)
+           (define hist (reverse raw-hist))
+           (for ([i (in-range 100)])
+             (replay w0 hist))]
+          [else
+           (error "bad input")])))
 
 ;; (time (main SMALL_TEST)) ; 66ms
-(time (main LARGE_TEST)) ; 340ms
+(main LARGE_TEST) ; 340ms

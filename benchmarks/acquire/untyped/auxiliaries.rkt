@@ -23,8 +23,14 @@
 
 ;; ---------------------------------------------------------------------------------------------------
 
+
+(define my-random
+  (let ((nn '()))
+    (lambda (n)
+      (begin0 (car nn) (set! nn (cdr nn))))))
+
 (define (randomly-pick l)
-  (list-ref l (random (length l))))
+  (list-ref l (my-random (length l))))
 
 (define (ext:aux:partition lo-h-size selector info)
   (define s* (map selector lo-h-size))

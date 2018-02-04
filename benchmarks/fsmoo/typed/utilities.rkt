@@ -15,6 +15,15 @@
 
 ;; =============================================================================
 
+(define my-random : (-> Real)
+  (let ([num*
+          (with-input-from-file "../base/utilities-random.rktd"
+            (lambda ()
+              (for/list : (Listof Real) ((ln (in-lines)))
+                (cast (string->number ln) Real))))])
+    (lambda ()
+      (begin0 (car num*) (set! num* (cdr num*))))))
+
 (define (sum l)
   (apply + l))
 

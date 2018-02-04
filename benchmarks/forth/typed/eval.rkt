@@ -50,12 +50,12 @@
         (cons (cons cmd E) S)]
        [_ #f])))))
 
-(: forth-eval* (-> Input-Port (Values (Option Env) Stack)))
+(: forth-eval* (-> (Listof String) (Values (Option Env) Stack)))
 (define (forth-eval* in)
   (for/fold : (Values (Option Env) Stack)
             ([e (ann (cons defn-command CMD*) (Option Env))]
              [s (stack-init)])
-      ([ln (in-lines in)])
+      ([ln (in-list in)])
     (define token* (forth-tokenize ln))
     (cond
      [(or (null? token*)
