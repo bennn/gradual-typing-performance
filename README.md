@@ -30,25 +30,25 @@ NOTE:
 - dungeon originally used random variables, but these were removed long ago
 
 
-| Benchmark  | IO                           | action           |
-|------------+------------------------------+------------------|
-| sieve      | print                        | removed          |
-| forth      | file I                       | pre-load         |
-| fsm        | random                       | replay           |
-| fsmoo      | random                       | replay           |
-| mbta       |                              | N/A              |
-| morsecode  |                              | N/A              |
-| zombie     | file I                       | pre-load         |
-| zordoz     | file I                       | pre-load, API    |
-| lnm        | file I/O                     | pre-load, API    |
-| suffixtree | file I                       | pre-load         |
-| kcfa       |                              | N/A              |
-| snake      | file I, random               | pre-load, replay |
-| take5      |                              | N/A              |
-| tetris     | file I, random               | pre-load, replay |
-| synth      | random                       | replay           |
-| gregor     | current-inexact-milliseconds |                  |
-| quadBG     | file O                       | remove           |
-| quadMB     | file O                       | remove           |
-| dungeon    |                              | N/A              |
-| acquire    | random                       | replay           |
+| Benchmark  | IO                           | action           | ok? |
+|------------+------------------------------+------------------+-----|
+| sieve      | print                        | removed          |     |
+| forth      | file I                       | pre-load         | Y   |
+| fsm        | random                       | replay           |     |
+| fsmoo      | random                       | replay           |     |
+| mbta       |                              | N/A              |     |
+| morsecode  |                              | N/A              |     |
+| zombie     | file I                       | pre-load         | ~   |
+| zordoz     | file I                       | pre-load, API    |     |
+| lnm        | file I/O                     | pre-load, API    |     |
+| suffixtree | file I                       | pre-load         |     |
+| kcfa       |                              | N/A              | Y   |
+| snake      | file I, random               | pre-load, replay |     |
+| take5      |                              | N/A              |     |
+| tetris     | file I, random               | pre-load, replay |     |
+| synth      | random                       | replay           |     |
+| gregor     | current-inexact-milliseconds |                  |     |
+| quadBG     | file O                       | remove           |     |
+| quadMB     | file O                       | remove           |     |
+| dungeon    |                              | N/A              |     |
+| acquire    | random                       | replay           | Y   |
