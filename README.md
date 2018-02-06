@@ -32,7 +32,7 @@ NOTE:
 
 | Benchmark  | IO                           | action           | ok? |
 |------------+------------------------------+------------------+-----|
-| sieve      | print                        | removed          |     |
+| sieve      | print                        | removed          | Y   |
 | forth      | file I                       | pre-load         | Y   |
 | fsm        | random                       | replay           |     |
 | fsmoo      | random                       | replay           |     |
@@ -40,10 +40,10 @@ NOTE:
 | morsecode  |                              | N/A              |     |
 | zombie     | file I                       | pre-load         | ~   |
 | zordoz     | file I                       | pre-load, API    |     |
-| lnm        | file I/O                     | pre-load, API    |     |
+| lnm        | file I/O                     | pre-load, API    | Y   |
 | suffixtree | file I                       | pre-load         |     |
-| kcfa       |                              | N/A              | Y   |
-| snake      | file I, random               | pre-load, replay |     |
+| kcfa       |                              | N/A              | Y   | # that was fucking dumb
+| snake      | file I, random               | pre-load, replay | Y   |
 | take5      |                              | N/A              |     |
 | tetris     | file I, random               | pre-load, replay |     |
 | synth      | random                       | replay           |     |
