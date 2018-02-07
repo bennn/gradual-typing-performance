@@ -41,7 +41,7 @@ NOTE:
 | zombie     | file I                       | pre-load         | ~   |
 | zordoz     | file I                       | pre-load, API    |     |
 | lnm        | file I/O                     | pre-load, API    | Y   |
-| suffixtree | file I                       | pre-load         |     |
+| suffixtree | file I                       | pre-load         | Y   |
 | kcfa       |                              | N/A              | Y   | # that was fucking dumb
 | snake      | file I, random               | pre-load, replay | Y   |
 | take5      |                              | N/A              |     |
